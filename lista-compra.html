@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lista de compra · Casa rural</title>
+<style>
+:root{
+  --bg:#f6f3ec; --card:#fffdf8; --ink:#2b2a26; --mut:#6f6b60; --line:#e4dfd2;
+  --ok:#2f7d4f; --okbg:#e3f2e8; --low:#b4541a; --lowbg:#fbe9dc; --hi:#8a6d0b; --hibg:#f8efc9;
+  --acc:#3d5a45; --accink:#fff;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#1d1d1a;--card:#262622;--ink:#efece3;--mut:#a39f92;--line:#3a3933;
+  --ok:#7fd1a0;--okbg:#22382b;--low:#f0a273;--lowbg:#412a1c;--hi:#e6cb6a;--hibg:#3b3418;--acc:#8fbf9c;--accink:#16241b;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--mut);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:3px}
+input,select,button{font:inherit;color:inherit}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:8px 12px}
+button.primary{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+button.ghost{border-color:transparent;color:var(--mut);padding:6px 8px}
+.people input{width:70px;font-size:18px;font-weight:700;text-align:center}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{border-radius:999px;padding:3px 10px;font-size:13px;font-weight:600}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.low{background:var(--lowbg);color:var(--low)} .pill.hi{background:var(--hibg);color:var(--hi)}
+.add{display:grid;grid-template-columns:1fr 90px 80px;gap:8px}
+.add .full{grid-column:1/-1}
+.add .name{grid-column:1/-1}
+.cat h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:18px 2px 6px}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+.item.done .nm{text-decoration:line-through;color:var(--mut)}
+.item input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
+.nm{font-weight:600}
+.qty{display:flex;gap:4px;align-items:center}
+.qty input{width:74px;text-align:right}
+.qty select{padding:8px 4px}
+.cov{grid-column:2/-1;display:flex;flex-direction:column;gap:4px}
+.bar{height:7px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.bar.ok i{background:var(--ok)} .bar.low i{background:var(--low)} .bar.hi i{background:var(--hi)}
+.msg{font-size:13px}
+.msg.ok{color:var(--ok)} .msg.low{color:var(--low)} .msg.hi{color:var(--hi)}
+.msg small{color:var(--mut)}
+.per{font-size:12px;color:var(--mut)}
+.per input{width:60px;padding:2px 6px;font-size:12px}
+.empty{text-align:center;color:var(--mut);padding:24px 10px}
+.tabs{display:flex;gap:6px;margin:6px 0 4px;flex-wrap:wrap}
+.tabs button.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+#sync{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:6px 14px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+#sync.show{opacity:.92}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="sync"></div>
+
+<script id="state" type="application/json">{"people": 18, "items": [{"id": "s01", "name": "Patatas fritas y similares (bolsas grandes ~250 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 9, "per": 0.3, "fixed": false, "done": false}, {"id": "s02", "name": "Frutos secos (bolsas ~200 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 3, "per": 0.25, "fixed": false, "done": false}, {"id": "s03", "name": "Aceitunas (tarros ~300 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 3, "per": 0.17, "fixed": false, "done": false}, {"id": "s04", "name": "Nachos (paquetes ~200 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 4, "per": 0.25, "fixed": false, "done": false}, {"id": "s05", "name": "Guacamole y salsas (tarrinas ~200 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 6, "per": 0.25, "fixed": false, "done": false}, {"id": "s06", "name": "Embutido y queso (jamón, chorizo, lomo, curado)", "cat": "Picoteo", "kind": "m", "unit": "kg", "qty": 2, "per": 0.15, "fixed": false, "done": false}, {"id": "s07", "name": "Pan (barras)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 7, "per": 0.5, "fixed": false, "done": false}, {"id": "s08", "name": "Hummus (tarrinas ~200 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 3, "per": 0.15, "fixed": false, "done": false}, {"id": "s09", "name": "Tortilla de patatas (grandes)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 3, "per": 0.15, "fixed": false, "done": false}, {"id": "s10", "name": "Zanahoria y pepino", "cat": "Picoteo", "kind": "m", "unit": "kg", "qty": 1, "per": 0.08, "fixed": false, "done": false}, {"id": "s11", "name": "Picos (paquetes ~250 g)", "cat": "Picoteo", "kind": "u", "unit": "ud", "qty": 3, "per": 0.1, "fixed": false, "done": false}, {"id": "s12", "name": "Gominolas y chocolate", "cat": "Picoteo", "kind": "m", "unit": "kg", "qty": 1.25, "per": 0.08, "fixed": false, "done": false}, {"id": "s13", "name": "Zumos", "cat": "Bebida", "kind": "v", "unit": "L", "qty": 5, "per": 0.4, "fixed": false, "done": false}, {"id": "s14", "name": "Coca-Cola (botellas 1,5 L)", "cat": "Bebida", "kind": "u", "unit": "ud", "qty": 2, "per": 0.27, "fixed": false, "done": false}, {"id": "s15", "name": "Refresco de naranja (botellas 1,5 L)", "cat": "Bebida", "kind": "u", "unit": "ud", "qty": 3, "per": 0.17, "fixed": false, "done": false}, {"id": "s16", "name": "Refresco de limón (botellas 1,5 L)", "cat": "Bebida", "kind": "u", "unit": "ud", "qty": 2, "per": 0.13, "fixed": false, "done": false}, {"id": "s17", "name": "Tónica (botellas 1,5 L)", "cat": "Bebida", "kind": "u", "unit": "ud", "qty": 4, "per": 0.2, "fixed": false, "done": false}, {"id": "s18", "name": "Agua", "cat": "Bebida", "kind": "v", "unit": "L", "qty": 30, "per": 2, "fixed": false, "done": false}, {"id": "s19", "name": "Cerveza (latas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 100, "per": 5, "fixed": false, "done": false}, {"id": "s20", "name": "Cerveza 0,0 tostada (latas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 10, "per": 0.5, "fixed": false, "done": false}, {"id": "s21", "name": "Radler (latas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 10, "per": 0.5, "fixed": false, "done": false}, {"id": "s22", "name": "Vino (botellas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 6, "per": 0.3, "fixed": false, "done": false}, {"id": "s23", "name": "Ginebra Larios (botellas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 2, "per": 0.1, "fixed": false, "done": false}, {"id": "s24", "name": "Whisky (botellas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 2, "per": 0.1, "fixed": false, "done": false}, {"id": "s25", "name": "Ron (botellas)", "cat": "Alcohol", "kind": "u", "unit": "ud", "qty": 2, "per": 0.1, "fixed": false, "done": false}, {"id": "s26", "name": "Hielo", "cat": "Alcohol", "kind": "m", "unit": "kg", "qty": 14, "per": 1, "fixed": false, "done": false}, {"id": "s27", "name": "Café", "cat": "Desayuno", "kind": "m", "unit": "g", "qty": 500, "per": 0.03, "fixed": false, "done": false}, {"id": "s28", "name": "Infusiones (cajas)", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 1, "per": 0.05, "fixed": false, "done": false}, {"id": "s29", "name": "Leche", "cat": "Desayuno", "kind": "v", "unit": "L", "qty": 7, "per": 0.5, "fixed": false, "done": false}, {"id": "s30", "name": "Leche de avena o soja", "cat": "Desayuno", "kind": "v", "unit": "L", "qty": 2, "per": 0.1, "fixed": false, "done": false}, {"id": "s31", "name": "Azúcar", "cat": "Desayuno", "kind": "m", "unit": "g", "qty": 500, "per": 0.025, "fixed": false, "done": false}, {"id": "s32", "name": "Pan de molde (paquetes)", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 4, "per": 0.2, "fixed": false, "done": false}, {"id": "s33", "name": "Magdalenas", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 48, "per": 2, "fixed": false, "done": false}, {"id": "s34", "name": "Aceite de oliva", "cat": "Desayuno", "kind": "v", "unit": "ml", "qty": 500, "per": 0.025, "fixed": false, "done": false}, {"id": "s35", "name": "Tomate rallado", "cat": "Desayuno", "kind": "m", "unit": "kg", "qty": 1, "per": 0.05, "fixed": false, "done": false}, {"id": "s36", "name": "Galletas (paquetes)", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 2, "per": 0.1, "fixed": false, "done": false}, {"id": "s37", "name": "Pavo", "cat": "Desayuno", "kind": "m", "unit": "g", "qty": 800, "per": 0.04, "fixed": false, "done": false}, {"id": "s38", "name": "Jamón", "cat": "Desayuno", "kind": "m", "unit": "g", "qty": 800, "per": 0.04, "fixed": false, "done": false}, {"id": "s39", "name": "Fruta (plátanos y mandarinas)", "cat": "Desayuno", "kind": "m", "unit": "kg", "qty": 4, "per": 0.3, "fixed": false, "done": false}, {"id": "s40", "name": "Cereales (paquetes)", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 2, "per": 0.08, "fixed": false, "done": false}, {"id": "s41", "name": "Mantequilla", "cat": "Desayuno", "kind": "m", "unit": "g", "qty": 500, "per": 0.025, "fixed": false, "done": false}, {"id": "s42", "name": "Mermelada (tarros)", "cat": "Desayuno", "kind": "u", "unit": "ud", "qty": 2, "per": 0.09, "fixed": false, "done": false}, {"id": "s43", "name": "Servilletas", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 150, "per": 8, "fixed": false, "done": false}, {"id": "s44", "name": "Papel de cocina (rollos)", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 4, "per": 0.2, "fixed": false, "done": false}, {"id": "s45", "name": "Bolsas de basura grandes", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 10, "per": 0.4, "fixed": false, "done": false}, {"id": "s46", "name": "Papel higiénico (rollos)", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 16, "per": 0.9, "fixed": false, "done": false}, {"id": "s47", "name": "Papel de aluminio (rollo)", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}, {"id": "s48", "name": "Film transparente (rollo)", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}, {"id": "s49", "name": "Abrebotellas", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}, {"id": "s50", "name": "Sacacorchos", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}, {"id": "s51", "name": "Detergente para lavavajillas", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}, {"id": "s52", "name": "Estropajos", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 2, "per": 0, "fixed": true, "done": false}, {"id": "s53", "name": "Sal", "cat": "Cosas aparte", "kind": "u", "unit": "ud", "qty": 1, "per": 0, "fixed": true, "done": false}]}</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+// 1. PEGA AQUÍ LOS DATOS DE TU PROYECTO DE FIREBASE
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCdP9Zhd2Jtxf2P7SASqiqY7gD-aeWFAjw",
+  authDomain: "lista-compra-ebaa5.firebaseapp.com",
+  databaseURL: "https://lista-compra-ebaa5-default-rtdb.europe-west1.firebasedatabase.app/",
+  projectId: "lista-compra-ebaa5",
+  appId: "1:537271996014:web:930422979c771b768ea07f"
+};
+
+// Cambia la ruta si quieres crear varias listas (ej. "listas/casa_rural_nov")
+const DB_PATH = "listas/casa_rural";
+
+// Catálogo: consumo medio por persona durante TODO el finde (cena viernes -> desayuno domingo, 6 comidas).
+const CATS=['Picoteo','Bebida','Alcohol','Desayuno','Comidas','Cosas aparte'];
+const CAT=[
+ ['pan de molde','Desayuno','m',0.1,'1 paquete ≈ 0,5 kg'],
+ ['cereales','Desayuno','m',0.08],['galletas','Desayuno','m',0.08],
+ ['bollería','Desayuno','u',2],['magdalenas','Desayuno','u',2],
+ ['café','Desayuno','m',0.03],['té o infusiones','Desayuno','u',2],
+ ['azúcar','Desayuno','m',0.025],['mermelada','Desayuno','m',0.04],['mantequilla','Desayuno','m',0.04],
+ ['zumo','Desayuno','v',0.4],
+ ['carne para barbacoa','Carne y proteína','m',0.5],['chuletas','Carne y proteína','m',0.4],
+ ['pollo','Carne y proteína','m',0.3],['carne picada','Carne y proteína','m',0.15],
+ ['hamburguesas','Carne y proteína','u',1.5],['salchichas','Carne y proteína','u',2],['chorizo','Carne y proteína','m',0.1],
+ ['embutido','Carne y proteína','m',0.15],['jamón','Carne y proteína','m',0.1],
+ ['atún en lata','Carne y proteína','u',0.7],['pescado','Carne y proteína','m',0.25],
+ ['pan','Pan, pasta y arroz','u',1.5,'barras de ~250 g'],['bocadillos (pan)','Pan, pasta y arroz','u',1],
+ ['pasta','Pan, pasta y arroz','m',0.15],['arroz','Pan, pasta y arroz','m',0.1],
+ ['patatas','Verdura y fruta','m',0.4],['tomate','Verdura y fruta','m',0.3],['lechuga','Verdura y fruta','m',0.15],
+ ['ensalada','Verdura y fruta','m',0.2],['cebolla','Verdura y fruta','m',0.1],['pimientos','Verdura y fruta','m',0.1],
+ ['verdura','Verdura y fruta','m',0.3],['fruta','Verdura y fruta','m',0.4],['plátanos','Verdura y fruta','u',1],
+ ['manzanas','Verdura y fruta','u',1],['naranjas','Verdura y fruta','u',1],
+ ['huevos','Lácteos y huevos','u',3],['leche','Lácteos y huevos','v',0.5],['yogures','Lácteos y huevos','u',2],
+ ['queso','Lácteos y huevos','m',0.1],['nata','Lácteos y huevos','v',0.05],
+ ['agua','Bebidas','v',2],['refrescos','Bebidas','v',1.5],['cerveza','Bebidas','v',1.5,'1 botellín = 0,33 L'],
+ ['vino','Bebidas','v',0.6,'1 botella = 0,75 L'],['cava','Bebidas','v',0.2],['licores','Bebidas','v',0.1],['hielo','Bebidas','m',1],
+ ['patatas fritas','Aperitivo y dulces','m',0.08],['frutos secos','Aperitivo y dulces','m',0.05],
+ ['aceitunas','Aperitivo y dulces','m',0.05],['helado','Aperitivo y dulces','v',0.15],
+ ['chocolate','Aperitivo y dulces','m',0.05],['postres','Aperitivo y dulces','u',1],
+ ['aceite','Despensa','v',0.08],['sal','Despensa','m',0.02],['tomate frito','Despensa','m',0.1],['vinagre','Despensa','v',0.01],
+ ['papel de cocina','Otros','u',0.2,'rollos'],['servilletas','Otros','u',10],['bolsas de basura','Otros','u',0.3],
+ ['carbón','Otros','m',0.5],['leña','Otros','m',2],
+ ['papel higiénico','Otros','u',0.9,'rollos'],['papel de aluminio','Otros','u',0],['film transparente','Otros','u',0],
+ ['abrebotellas','Otros','u',0],['sacacorchos','Otros','u',0],['detergente lavavajillas','Otros','u',0],['estropajos','Otros','u',0],
+];
+const MAP={'Carne y proteína':'Comidas','Pan, pasta y arroz':'Comidas','Verdura y fruta':'Comidas','Lácteos y huevos':'Desayuno','Aperitivo y dulces':'Picoteo','Despensa':'Comidas','Otros':'Cosas aparte','Bebidas':'Bebida'};
+for(const c of CAT){ if(['cerveza','vino','cava','licores','hielo'].includes(c[0])) c[1]='Alcohol'; else if(MAP[c[1]]) c[1]=MAP[c[1]]; }
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+function findCat(name){
+  const n=norm(name); if(!n) return null;
+  let best=null;
+  for(const c of CAT){const k=norm(c[0]); if(n===k) return c; if(n.includes(k)&&(!best||k.length>norm(best[0]).length)) best=c;}
+  return best;
+}
+const UNITS={m:[['kg',1],['g',0.001]],v:[['L',1],['ml',0.001]],u:[['ud',1]]};
+const baseU={m:'kg',v:'L',u:'ud'};
+const factor=(kind,u)=>(UNITS[kind].find(x=>x[0]===u)||UNITS[kind][0])[1];
+
+const initialState = JSON.parse(document.getElementById('state').textContent);
+let S = structuredClone(initialState);
+let filter = 'all';
+let applyingRemote = false;
+
+const $=(t,a={},...k)=>{const e=document.createElement(t);for(const[x,v]of Object.entries(a)){if(x==='class')e.className=v;else if(x.startsWith('on'))e.addEventListener(x.slice(2),v);else if(v===true)e[x]=true;else if(v!==false&&v!=null)e.setAttribute(x,v);}
+  for(const c of k.flat())if(c!=null)e.append(c.nodeType?c:document.createTextNode(c));return e;};
+const fmt=n=>{if(!isFinite(n))return'–';const a=Math.abs(n);const d=a>=100?0:a>=10?1:a>=1?1:2;return new Intl.NumberFormat('es-ES',{maximumFractionDigits:d}).format(n);};
+function amount(base,kind){
+  if(kind==='m'&&base<1) return fmt(base*1000)+' g';
+  if(kind==='v'&&base<1) return fmt(base*1000)+' ml';
+  return fmt(base)+' '+baseU[kind];
+}
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+const syncEl=document.getElementById('sync');
+function toast(t){syncEl.textContent=t;syncEl.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>syncEl.classList.remove('show'),1800);}
+
+const isConfigured = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith("TU_");
+let dbRef = null;
+let saveTimer = null;
+
+function normalizeState(raw){
+  return {
+    people: Math.max(1, parseInt(raw?.people, 10) || 18),
+    items: Array.isArray(raw?.items) ? raw.items : structuredClone(initialState.items)
+  };
+}
+
+function saveLocal(){
+  try{ localStorage.setItem('compra-casa-rural-fb', JSON.stringify(S)); }catch(e){}
+}
+
+function save(){
+  saveLocal();
+  if(applyingRemote) return;
+  if(!isConfigured || !dbRef){
+    toast('Guardado en este dispositivo (configura Firebase para tiempo real)');
+    return;
+  }
+  clearTimeout(saveTimer);
+  toast('Sincronizando…');
+  saveTimer = setTimeout(async()=>{
+    try{
+      await set(dbRef, normalizeState(S));
+      toast('Sincronizado');
+    }catch(e){
+      console.error(e);
+      toast('Sin conexión; guardado local');
+    }
+  }, 350);
+}
+
+function calc(it){
+  if(it.fixed) return {base:it.qty,need:0,covers:NaN,st:'fixed'};
+  const base=it.qty*factor(it.kind,it.unit);
+  const need=it.per*S.people;
+  const covers=it.per>0?base/it.per:NaN;
+  let st='ok';
+  if(!(it.per>0)) st='none'; else if(covers<S.people*0.95) st='low'; else if(covers>S.people*1.5) st='hi';
+  return {base,need,covers,st};
+}
+
+function render(){
+  const app=document.getElementById('app'); app.replaceChildren();
+  const calcs=S.items.map(calc);
+  const nLow=calcs.filter(c=>c.st==='low').length, nOk=calcs.filter(c=>c.st==='ok').length, nHi=calcs.filter(c=>c.st==='hi').length;
+  const nDone=S.items.filter(i=>i.done).length;
+
+  app.append($('h1',{},'🏡 Lista de compra · Casa rural'),
+    $('p',{class:'sub'},'Viernes tarde → domingo por la mañana (cena V, 3 comidas S, desayuno D). Cada producto calcula para cuántas personas llega.'));
+
+  const peopleIn=$('input',{type:'number',min:1,value:S.people,inputmode:'numeric',onchange:e=>{S.people=Math.max(1,parseInt(e.target.value)||1);save();render();}});
+  app.append($('div',{class:'card people'},
+    $('div',{class:'row'},$('div',{},$('label',{},'Personas'),peopleIn),
+      $('div',{style:'flex:1;min-width:150px'},$('div',{class:'stats'},
+        $('span',{class:'pill ok'},'✓ '+nOk+' cubiertos'),
+        $('span',{class:'pill low'},'↓ '+nLow+' se quedan cortos'),
+        $('span',{class:'pill hi'},'↑ '+nHi+' de sobra'),
+        $('span',{class:'pill',style:'background:var(--line)'},'🛒 '+nDone+'/'+S.items.length+' comprado')))),
+  ));
+
+  const nameIn=$('input',{type:'text',placeholder:'Producto (p. ej. pasta, vino, huevos…)',list:'cat',autocomplete:'off'});
+  const dl=$('datalist',{id:'cat'},CAT.map(c=>$('option',{value:c[0]})));
+  const qtyIn=$('input',{type:'number',min:0,step:'any',placeholder:'Cantidad',inputmode:'decimal'});
+  const unitSel=$('select',{});
+  const catSel=$('select',{},CATS.map(c=>$('option',{value:c},c)));
+  const perIn=$('input',{type:'number',min:0,step:'any',placeholder:'—',inputmode:'decimal'});
+  const perLab=$('label',{},'Consumo por persona en el finde');
+  const hint=$('div',{class:'per',style:'margin-top:4px'});
+  let curKind='u';
+  function setKind(k){curKind=k;unitSel.replaceChildren(...UNITS[k].map(u=>$('option',{value:u[0]},u[0])));}
+  setKind('u');
+  function onName(){
+    const c=findCat(nameIn.value);
+    if(c){setKind(c[2]);catSel.value=c[1];perIn.value=c[3];hint.textContent='Estimación habitual: '+amount(c[3],c[2])+' por persona'+(c[4]?' ('+c[4]+')':'');}
+    else{hint.textContent=nameIn.value?'No lo conozco: indica cuánto come/bebe cada persona en el finde (en '+baseU[curKind]+').':'';}
+  }
+  nameIn.addEventListener('input',onName);
+  nameIn.addEventListener('change',onName);
+  const kindSel=$('select',{onchange:e=>setKind(e.target.value)},[['u','Unidades'],['m','Peso'],['v','Volumen']].map(([v,t])=>$('option',{value:v},t)));
+  const fixedCb=$('input',{type:'checkbox'});
+  const addBtn=$('button',{class:'primary full',onclick:()=>{
+    const name=nameIn.value.trim(); const qty=parseFloat(qtyIn.value);
+    if(!name||!(qty>=0)){toast('Pon nombre y cantidad');return;}
+    const c=findCat(name);
+    let per=parseFloat(perIn.value); if(!(per>0)) per=c?c[3]:0;
+    const fixed=fixedCb.checked||(c&&c[3]===0&&!(parseFloat(perIn.value)>0));
+    S.items.push({id:uid(),name,cat:catSel.value,kind:curKind,unit:unitSel.value,qty,per,fixed:!!fixed,done:false});
+    save();render();
+  }},'+ Añadir a la lista');
+  const form=$('div',{class:'card'},
+    $('div',{class:'add'},
+      $('div',{class:'name'},nameIn,dl),
+      $('div',{},$('label',{},'Cantidad'),qtyIn),
+      $('div',{},$('label',{},'Unidad'),unitSel),
+      $('div',{},$('label',{},'Tipo'),kindSel),
+      $('div',{class:'full'},$('label',{},'Categoría'),catSel),
+      $('div',{class:'full'},perLab,perIn,hint),
+      $('label',{class:'full',style:'display:flex;gap:6px;align-items:center'},fixedCb,'No depende del nº de personas (utensilios, etc.)'),
+      addBtn));
+  app.append(form);
+
+  const tabs=$('div',{class:'tabs'},[['all','Todo'],['low','Faltan'],['hi','Sobran'],['todo','Sin comprar']].map(([k,t])=>
+    $('button',{class:filter===k?'on':'',onclick:()=>{filter=k;render();}},t)));
+  app.append(tabs);
+
+  const vis=S.items.map((it,i)=>({it,c:calcs[i]})).filter(({it,c})=>filter==='all'||(filter==='low'&&c.st==='low')||(filter==='hi'&&c.st==='hi')||(filter==='todo'&&!it.done));
+  if(!vis.length){app.append($('div',{class:'empty'},S.items.length?'Nada en este filtro.':'La lista está vacía. Añade el primer producto arriba 👆'));}
+  for(const cat of CATS){
+    const group=vis.filter(v=>v.it.cat===cat); if(!group.length) continue;
+    const sec=$('section',{class:'cat'},$('h2',{},cat));
+    for(const {it,c} of group) sec.append(itemEl(it,c));
+    app.append(sec);
+  }
+}
+
+function itemEl(it,c){
+  const qIn=$('input',{type:'number',min:0,step:'any',value:it.qty,inputmode:'decimal',onchange:e=>{it.qty=Math.max(0,parseFloat(e.target.value)||0);save();render();}});
+  const uSel=$('select',{onchange:e=>{it.unit=e.target.value;save();render();}},UNITS[it.kind].map(u=>$('option',{value:u[0],selected:u[0]===it.unit},u[0])));
+  const perIn=$('input',{type:'number',min:0,step:'any',value:it.per||'',inputmode:'decimal',onchange:e=>{it.per=Math.max(0,parseFloat(e.target.value)||0);save();render();}});
+  let cov;
+  if(c.st==='fixed'){
+    cov=null;
+  }else if(c.st==='none'){
+    cov=$('div',{class:'cov'},$('div',{class:'msg low'},'Indica el consumo por persona para estimar →'));
+  }else{
+    const pct=Math.min(100,c.covers/S.people*100);
+    const diff=c.base-c.need;
+    const msg=c.st==='low'?['low','Llega para ~'+fmt(Math.floor(c.covers*10)/10)+' personas · faltan '+amount(-diff,it.kind)]
+      :c.st==='hi'?['hi','Da para ~'+fmt(c.covers)+' personas · sobran '+amount(diff,it.kind)]
+      :['ok','Cubre a las '+S.people+' personas'+(diff>0.0001?' · +'+amount(diff,it.kind)+' de margen':'')];
+    cov=$('div',{class:'cov'},$('div',{class:'bar '+c.st},$('i',{style:'width:'+pct+'%'})),$('div',{class:'msg '+msg[0]},msg[1]));
+  }
+  return $('div',{class:'item'+(it.done?' done':'')},
+    $('input',{type:'checkbox',checked:it.done,onchange:e=>{it.done=e.target.checked;save();render();}}),
+    $('div',{},$('div',{class:'nm'},it.name),
+      it.fixed?$('div',{class:'per'},'No depende del nº de personas'):$('div',{class:'per'},'Consumo/persona: ',perIn,' '+baseU[it.kind]+' · para '+S.people+': '+(it.per>0?amount(c.need,it.kind):'–'))),
+    $('div',{class:'qty'},qIn,uSel,$('button',{class:'ghost',title:'Quitar',onclick:()=>{S.items=S.items.filter(x=>x.id!==it.id);save();render();}},'✕')),
+    cov);
+}
+
+try{
+  const cached = localStorage.getItem('compra-casa-rural-fb');
+  if(cached) S = normalizeState(JSON.parse(cached));
+}catch(e){}
+render();
+
+if(isConfigured){
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getDatabase(app);
+  dbRef = ref(db, DB_PATH);
+
+  onValue(dbRef, (snap) => {
+    const val = snap.val();
+    if(val){
+      applyingRemote = true;
+      S = normalizeState(val);
+      saveLocal();
+      render();
+      applyingRemote = false;
+    }else{
+      // Primera vez: sube la lista inicial si la ruta aún no existe
+      set(dbRef, normalizeState(S)).catch(console.error);
+    }
+  });
+}
+</script>
+</body>
+</html>
